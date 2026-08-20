@@ -1,9 +1,19 @@
 #!/usr/bin/env zsh
 # Apply juxtopposed.com's pixel-art macOS icon pack to whichever of its
-# apps are actually installed on this machine. Safe subset only: apps
-# living in /Applications. System apps (Finder, Safari, Terminal, Messages,
-# Calculator, etc.) are SIP-protected and deliberately left alone -- see
-# set-app-icon.sh.
+# apps are actually installed on this machine, plus any Dock shortcut
+# apps standing in for SIP-protected system apps.
+#
+# Regular apps: safe subset only, apps living in /Applications. System
+# apps (Finder, Safari, Terminal, Calculator, etc.) are SIP-protected and
+# deliberately left alone -- see set-app-icon.sh.
+#
+# Dock shortcuts: some SIP-protected apps (Messages, Calendar, Notes, App
+# Store, System Settings, Launchpad, ...) have a small Automator "applet"
+# wrapper in ~/Applications instead (just does
+# `tell application id "..." to activate`), pinned to the Dock in place of
+# the real app -- that's what actually gets a themed icon, since the real
+# app under /System/Applications can't be touched. These are personal to
+# this machine; bootstrap.sh doesn't recreate them on a fresh install.
 #
 # Usage: apply-icon-pack.sh
 # Source: https://www.juxtopposed.com/macos-icons
@@ -30,19 +40,31 @@ typeset -A PACK=(
   Notion   "/Applications/Notion.app"
 )
 
+# icon-pack filename (no extension) -> Dock-shortcut applet path. Label on
+# disk doesn't always match the pack's filename (e.g. "System Settings"
+# shortcut, "Settings" icon), hence a separate table instead of reusing PACK.
+typeset -A DOCK_SHORTCUTS=(
+  Launchpad "$HOME/Applications/Apps.app"
+  Messages  "$HOME/Applications/Messages.app"
+  Calendar  "$HOME/Applications/Calendar.app"
+  Notes     "$HOME/Applications/Notes.app"
+  Appstore  "$HOME/Applications/App Store.app"
+  Settings  "$HOME/Applications/System Settings.app"
+)
+
 themed=()
 skipped=()
 
-for name in "${(@k)PACK}"; do
-  app_path="${PACK[$name]}"
-  [[ ! -d "$app_path" ]] && { skipped+=("$name (not installed)"); continue; }
+theme_target() {
+  local name="$1" app_path="$2"
+  [[ ! -d "$app_path" ]] && { skipped+=("$name (not installed)"); return; }
 
-  png="$ICONS_DIR/$name.png"
+  local png="$ICONS_DIR/$name.png"
   if [[ ! -f "$png" ]]; then
     if ! curl -sf -A "Mozilla/5.0" -o "$png" "https://www.juxtopposed.com/$name.png"; then
       rm -f "$png"
       skipped+=("$name (icon download failed)")
-      continue
+      return
     fi
   fi
 
@@ -51,6 +73,13 @@ for name in "${(@k)PACK}"; do
   else
     skipped+=("$name (set-app-icon.sh failed)")
   fi
+}
+
+for name in "${(@k)PACK}"; do
+  theme_target "$name" "${PACK[$name]}"
+done
+for name in "${(@k)DOCK_SHORTCUTS}"; do
+  theme_target "$name" "${DOCK_SHORTCUTS[$name]}"
 done
 
 killall Finder Dock 2>/dev/null || true

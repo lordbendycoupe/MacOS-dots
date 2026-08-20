@@ -1,0 +1,8 @@
+# AutoRaise config -- focus-follows-mouse for AeroSpace (tiling WM), no raise/warp.
+# Built with -DEXPERIMENTAL_FOCUS_FIRST so focusDelay works: hovering a
+# window focuses it in AeroSpace's tree without reordering/raising it.
+delay=0
+focusDelay=1
+pollMillis=50
+requireMouseStop=true
+mouseDelta=0.1

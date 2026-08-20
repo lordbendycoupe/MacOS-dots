@@ -1,0 +1,198 @@
+#!/usr/bin/env zsh
+# Catppuccin Macchiato theme, carried over thematically from ~/dotfiles/.config/sketchybar
+# (module set, icon choices, accent-color-per-module pattern), merged with a
+# pass at translating native macOS menu bar functionality. WiFi and the
+# camera indicator open the *real* Control Center dropdowns via a single
+# accessibility click rather than reimplementing them. Matching by
+# AXIdentifier turned out to be flaky (the "whose" filter throws if *any*
+# item in ControlCenter's menu bar lacks a readable identifier, aborting the
+# whole match) -- matching by description substring is reliable instead.
+
+PLUGIN_DIR="$CONFIG_DIR/plugins"
+
+##### Catppuccin Macchiato palette #####
+MAUVE=0xffc6a0f6
+RED=0xffed8796
+PEACH=0xfff5a97f
+YELLOW=0xffeed49f
+GREEN=0xffa6da95
+SKY=0xff91d7e3
+BLUE=0xff8aadf4
+LAVENDER=0xffb7bdf8
+TEXT=0xffcad3f5
+SURFACE2=0xff5b6078
+SURFACE1=0x66494d64
+BASE=0xff24273a
+
+FONT_FACE="JetBrainsMono Nerd Font"
+SPOTIFY_EVENT="com.spotify.client.PlaybackStateChanged"
+
+WIFI_CLICK='osascript -e "tell application \"System Events\" to tell process \"ControlCenter\" to click (first menu bar item of menu bar 1 whose description contains \"Wi\")"'
+CAMERA_CLICK='osascript -e "tell application \"System Events\" to tell process \"ControlCenter\" to click (first menu bar item of menu bar 1 whose description contains \"Audio and Video\")"'
+CONTROLCENTER_CLICK='osascript -e "tell application \"System Events\" to tell process \"ControlCenter\" to click (first menu bar item of menu bar 1 whose description contains \"Control Center\")"'
+CLOCK_CLICK='osascript -e "tell application \"System Events\" to tell process \"ControlCenter\" to click (first menu bar item of menu bar 1 whose description contains \"Clock\")"'
+
+##### Bar Appearance #####
+sketchybar --bar height=30 \
+                 position=top \
+                 color=0xcc1e2030 \
+                 border_width=0 \
+                 blur_radius=30 \
+                 sticky=on \
+                 padding_left=6 \
+                 padding_right=10 \
+                 y_offset=0
+
+##### Defaults: every item gets its own pill with a visible gap to its
+##### neighbors (background.padding_right is what creates that gap -- its
+##### absence previously made adjacent pills touch/overlap). #####
+sketchybar --default drawing=on \
+                      updates=when_shown \
+                      icon.font="$FONT_FACE:Bold:13.0" \
+                      icon.color="$TEXT" \
+                      label.font="$FONT_FACE:Medium:11.0" \
+                      label.color="$TEXT" \
+                      icon.padding_left=9 \
+                      icon.padding_right=5 \
+                      label.padding_left=3 \
+                      label.padding_right=10 \
+                      background.drawing=on \
+                      background.color="$SURFACE1" \
+                      background.corner_radius=6 \
+                      background.height=22 \
+                      background.padding_right=8
+
+##### Left: Apple menu (real menu functionality, no pill -- native look) #####
+sketchybar --add item apple left \
+           --set apple icon=$'' \
+                       icon.font="SF Pro:Bold:15.0" \
+                       icon.color="$LAVENDER" \
+                       label.drawing=off \
+                       icon.padding_left=8 \
+                       icon.padding_right=8 \
+                       background.drawing=off \
+                       click_script='osascript -e "tell application \"System Events\" to tell (first process whose frontmost is true) to click menu bar item 1 of menu bar 1"'
+
+##### Left: search (Spotlight), right next to the Apple button #####
+sketchybar --add item search left \
+           --set search icon=$'\xef\x80\x82' \
+                        icon.color="$BASE" \
+                        icon.padding_right=8 \
+                        label.drawing=off \
+                        background.color="$YELLOW" \
+                        click_script='osascript -e "tell application \"System Events\" to keystroke space using {command down}"'
+
+##### Left: front app (name next to icon, one app-per-icon, like the real
+##### macOS menu bar's app name) #####
+sketchybar --add item front_app left \
+           --set front_app background.color="$GREEN" \
+                           background.padding_left=0 \
+                           background.padding_right=0 \
+                           icon.color="$BASE" \
+                           icon.y_offset=1 \
+                           label.drawing=off \
+                           script="$PLUGIN_DIR/front_app.sh" \
+           --add item front_app.name left \
+           --set front_app.name background.color="$GREEN" \
+                                background.padding_left=0 \
+                                icon.drawing=off \
+                                label.color="$BASE" \
+                                label.font="$FONT_FACE:Bold:11.0" \
+                                label.width=110 \
+                                label.align=left \
+           --add bracket front_app.group front_app front_app.name \
+           --set front_app.group background.color="$GREEN" \
+                                 background.padding_right=14 \
+           --subscribe front_app front_app_switched
+
+##### Left: workspaces, placed right after the app name so they don't sit
+##### under the notch/island (previously center, which does) #####
+sketchybar --add event aerospace_workspace_change
+
+for sid in $(aerospace list-workspaces --all); do
+  sketchybar --add item space.$sid left \
+             --subscribe space.$sid aerospace_workspace_change \
+             --set space.$sid \
+                 icon.drawing=off \
+                 label="$sid" \
+                 label.font="$FONT_FACE:Medium:12.0" \
+                 label.padding_left=6 \
+                 label.padding_right=6 \
+                 background.corner_radius=6 \
+                 background.height=20 \
+                 background.padding_right=2 \
+                 background.drawing=off \
+                 click_script="aerospace workspace $sid" \
+                 script="$PLUGIN_DIR/aerospace.sh $sid"
+done
+
+##### Right: status modules, each its own solid color-coded box #####
+
+CONTROLCENTER_ICON=$'\xef\x87\x9e'
+sketchybar --add item controlcenter right \
+           --set controlcenter icon="$CONTROLCENTER_ICON" \
+                                icon.color="$BASE" \
+                                label.drawing=off \
+                                background.color="$LAVENDER" \
+                                background.padding_right=0 \
+                                click_script="$CONTROLCENTER_CLICK"
+
+sketchybar --add item spotify right \
+           --set spotify icon=$'' \
+                         icon.color="$TEXT" \
+                         label.drawing=off \
+                         background.color="$SURFACE2" \
+                         script="$PLUGIN_DIR/spotify.sh" \
+           --add event spotify_change $SPOTIFY_EVENT \
+           --subscribe spotify spotify_change mouse.clicked
+
+sketchybar --add item focus right \
+           --set focus icon=$'' \
+                       drawing=off \
+                       update_freq=15 \
+                       click_script='open "x-apple.systempreferences:com.apple.Focus-Settings.extension"' \
+                       script="$PLUGIN_DIR/focus.sh"
+
+sketchybar --add item mic right \
+           --set mic icon=$'' \
+                     update_freq=3 \
+                     click_script="$CAMERA_CLICK" \
+                     script="$PLUGIN_DIR/mic.sh"
+
+sketchybar --add item camera right \
+           --set camera icon=$'' \
+                       label.drawing=off \
+                       icon.padding_right=8 \
+                       drawing=off \
+                       update_freq=2 \
+                       click_script="$CAMERA_CLICK" \
+                       script="$PLUGIN_DIR/camera.sh"
+
+sketchybar --add item wifi right \
+           --set wifi label.drawing=off \
+                      update_freq=30 \
+                      click_script="$WIFI_CLICK" \
+                      script="$PLUGIN_DIR/wifi.sh"
+
+sketchybar --add item volume right \
+           --set volume click_script='open "x-apple.systempreferences:com.apple.preference.sound"' \
+                        script="$PLUGIN_DIR/volume.sh" \
+           --subscribe volume volume_change mouse.scrolled
+
+sketchybar --add item battery right \
+           --set battery update_freq=60 \
+                         click_script='open "x-apple.systempreferences:com.apple.Battery-Settings.extension"' \
+                         script="$PLUGIN_DIR/battery.sh" \
+           --subscribe battery system_woke power_source_change
+
+sketchybar --add item clock right \
+           --set clock background.color="$RED" \
+                       icon.color="$BASE" \
+                       label.color="$BASE" \
+                       label.font="$FONT_FACE:Bold:11.0" \
+                       update_freq=10 \
+                       click_script="$CLOCK_CLICK" \
+                       script="$PLUGIN_DIR/clock.sh"
+
+##### Force all scripts to run once at startup #####
+sketchybar --update

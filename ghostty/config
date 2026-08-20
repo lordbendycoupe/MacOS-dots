@@ -1,0 +1,47 @@
+# Ported from ~/.config/alacritty/alacritty.toml.
+# Background/foreground/cursor/selection/black/white kept as moonfly
+# (matches Alacritty and nvim). The six ANSI accent colors (red, green,
+# yellow, blue, magenta, cyan) are retinted to Catppuccin Macchiato to
+# match ~/.config/sketchybar/sketchybarrc instead of moonfly's originals.
+
+font-family = "Maple Mono NF"
+font-size = 14
+
+background-opacity = 1
+
+background = #080808
+foreground = #bdbdbd
+# Equivalent of Alacritty's colors.primary.bright_foreground: the color
+# used for default-color bold text. Colored (indexed) bold text still
+# resolves to that color's bright palette entry automatically.
+bold-color = #eeeeee
+
+cursor-color = #8e8e8e
+cursor-text = #080808
+
+selection-background = #b2ceee
+selection-foreground = #080808
+
+# black / bright-black / white / bright-white -- moonfly neutrals
+palette = 0=#323437
+palette = 7=#c6c6c6
+palette = 8=#949494
+palette = 15=#e4e4e4
+
+# red / green / yellow / blue / magenta / cyan -- Catppuccin Macchiato
+# (the official Catppuccin terminal themes use identical normal/bright
+# values for these six, differing only in black/white)
+palette = 1=#ed8796
+palette = 2=#a6da95
+palette = 3=#eed49f
+palette = 4=#8aadf4
+palette = 5=#f5bde6
+palette = 6=#8bd5ca
+palette = 9=#ed8796
+palette = 10=#a6da95
+palette = 11=#eed49f
+palette = 12=#8aadf4
+palette = 13=#f5bde6
+palette = 14=#8bd5ca
+
+keybind = shift+enter=text:\x1b\r

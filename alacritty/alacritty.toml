@@ -1,0 +1,65 @@
+[window]
+opacity = 1
+
+
+[font]
+size = 14.0
+
+[font.bold]
+family = "Maple Mono NF"
+style = "Bold"
+
+[font.bold_italic]
+family = "Maple Mono NF"
+style = "Bold Italic"
+
+[font.italic]
+family = "Maple Mono NF"
+style = "Italic"
+
+[font.normal]
+family = "Maple Mono NF"
+style = "Regular"
+
+
+# moonfly (matches nvim colorscheme) - github.com/bluz71/vim-moonfly-colors
+[colors]
+draw_bold_text_with_bright_colors = true
+
+[colors.primary]
+background = "#080808"
+foreground = "#bdbdbd"
+bright_foreground = "#eeeeee"
+
+[colors.cursor]
+text = "#080808"
+cursor = "#8e8e8e"
+
+[colors.selection]
+background = "#b2ceee"
+text = "#080808"
+
+[colors.normal]
+black = "#323437"
+red = "#ff5454"
+green = "#8cc85f"
+yellow = "#e3c78a"
+blue = "#80a0ff"
+magenta = "#cf87e8"
+cyan = "#79dac8"
+white = "#c6c6c6"
+
+[colors.bright]
+black = "#949494"
+red = "#ff5189"
+green = "#36c692"
+yellow = "#c6c684"
+blue = "#74b2ff"
+magenta = "#ae81ff"
+cyan = "#85dc85"
+white = "#e4e4e4"
+
+[[keyboard.bindings]]
+key = "Return"
+mods = "Shift"
+chars = "\u001B\r"

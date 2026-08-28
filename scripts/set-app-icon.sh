@@ -24,6 +24,15 @@ fi
 RESOURCES="$APP_PATH/Contents/Resources"
 PLIST="$APP_PATH/Contents/Info.plist"
 
+# Backups live OUTSIDE the bundle (a hidden sibling dir), never inside
+# Contents/ -- codesign's resource-sealing walk trips over stray files
+# there (a Info.plist.bak next to Info.plist got flagged "code object is
+# not signed at all / In subcomponent"), so keeping originals inside the
+# bundle we're about to re-sign is asking for the same class of problem
+# the Icon<CR> cleanup below already deals with once.
+BACKUP_DIR="$(dirname "$APP_PATH")/.icon-backups/$(basename "$APP_PATH" .app)"
+mkdir -p "$BACKUP_DIR"
+
 # CFBundleIconFile is sometimes given without the .icns extension.
 ICON_NAME=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIconFile" "$PLIST" 2>/dev/null || true)
 if [[ -z "$ICON_NAME" ]]; then
@@ -59,10 +68,25 @@ iconutil -c icns "$ICONSET" -o "$WORKDIR/new.icns"
 # Keep exactly one backup of whatever the icon was before we ever touched
 # it -- re-running this on an app we already themed shouldn't clobber the
 # real original with a themed-over-themed copy.
-if [[ ! -f "$ICNS_PATH.bak" ]]; then
-  cp "$ICNS_PATH" "$ICNS_PATH.bak"
+ICNS_BACKUP="$BACKUP_DIR/$(basename "$ICON_NAME")"
+if [[ ! -f "$ICNS_BACKUP" ]]; then
+  cp "$ICNS_PATH" "$ICNS_BACKUP"
 fi
 cp "$WORKDIR/new.icns" "$ICNS_PATH"
+
+# Modern app bundles often also carry CFBundleIconName, pointing at a
+# compiled asset-catalog entry (Contents/Resources/Assets.car). When
+# present, Icon Services prefers THAT over CFBundleIconFile, so replacing
+# the .icns alone is invisible. Drop the key (not the .car itself -- it can
+# hold other in-app UI assets we don't want to disturb) so resolution falls
+# back to the .icns we just wrote. One-time Info.plist backup, same
+# once-only pattern as the .icns backup above.
+if /usr/libexec/PlistBuddy -c "Print :CFBundleIconName" "$PLIST" >/dev/null 2>&1; then
+  if [[ ! -f "$BACKUP_DIR/Info.plist" ]]; then
+    cp "$PLIST" "$BACKUP_DIR/Info.plist"
+  fi
+  /usr/libexec/PlistBuddy -c "Delete :CFBundleIconName" "$PLIST"
+fi
 
 # A leftover Finder "paste a custom icon" artifact (a hidden Icon<CR> file
 # plus a com.apple.FinderInfo xattr at the bundle root) makes codesign

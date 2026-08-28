@@ -30,15 +30,15 @@ if [[ -f "$PIXEL_ICON" ]]; then
   sketchybar --set $NAME icon.drawing=on \
                          icon=" " \
                          icon.color=0x00ffffff \
-                         icon.width=22 \
-                         icon.padding_left=8 \
-                         icon.padding_right=5 \
+                         icon.width=26 \
+                         icon.padding_left=7 \
+                         icon.padding_right=4 \
                          icon.background.drawing=on \
                          icon.background.color="$ACCENT" \
-                         icon.background.height=20 \
-                         icon.background.corner_radius=4 \
+                         icon.background.height=24 \
+                         icon.background.corner_radius=5 \
                          icon.background.image="$PIXEL_ICON" \
-                         icon.background.image.scale=0.08 \
+                         icon.background.image.scale=0.094 \
                          background.color="$ACCENT"
   sketchybar --set $NAME.name label="$INFO" background.color="$ACCENT"
   sketchybar --set front_app.group background.color="$ACCENT"

@@ -11,9 +11,27 @@ after-login-command = []
 # Available commands : https://nikitabobko.github.io/AeroSpace/commands
 after-startup-command = ['exec-and-forget sketchybar',
 
+                        # Loads ~/.config/borders/bordersrc (style/width/
+                        # inactive_color/initial active_color -- see that
+                        # file). There used to be a second `borders
+                        # active_color=... width=...` call right after this
+                        # one that silently overrode bordersrc's values with
+                        # a different (and also malformed -- missing the
+                        # alpha byte) color and width on every startup; the
+                        # active_color it set is now owned by
+                        # border-color-follow-focus.sh below instead, so
+                        # that duplicate call was just removed rather than
+                        # fixed in place.
                         'exec-and-forget borders',
 
-                        'exec-and-forget borders active_color=0x6f1e7d inactive_color=0xff494d64 width=10.0',
+                        # Gives the just-focused window a fresh random color
+                        # from the Catppuccin Macchiato accents (same set
+                        # sketchybar/icons already use) every time focus
+                        # moves to a different window -- borders itself has
+                        # no per-window/random color feature (man borders),
+                        # just one global active_color, so this polls for
+                        # focus changes and live-updates it.
+                        'exec-and-forget $HOME/.config/aerospace/scripts/border-color-follow-focus.sh',
 
                         # Re-apply the last saved window->workspace layout.
                         # Runs on every AeroSpace startup (login, manual
@@ -107,6 +125,23 @@ if.app-id = 'com.google.Chrome'
 if.window-title-regex-substring = 'Picture.in.Picture'
 run = 'layout floating'
 
+# Ghostty's native macOS tabs (cmd+t) each register as their own window with
+# the Accessibility API -- the same API AeroSpace uses to detect windows --
+# so a new tab is indistinguishable from a genuinely new Ghostty window and
+# gets tiled instead of merging into the existing window's tab bar. This is
+# a macOS API limitation, not something Ghostty or AeroSpace can fix outright
+# (nikitabobko/AeroSpace#887, closed not-planned; ghostty.org/docs/help/
+# macos-tiling-wms has this exact snippet). `layout tiling` here is a no-op
+# for normal new windows (opened via alt-q/alt-enter, which should still
+# tile like any other app) but is what Ghostty's own docs recommend trying
+# first for the tab case. If tabs still show up as separate tiled windows
+# instead of merging, switch `run` to 'layout floating' instead -- the
+# tradeoff there is every new Ghostty window starts floating and needs
+# manually un-floating (alt-shift-; then f).
+[[on-window-detected]]
+if.app-id = 'com.mitchellh.ghostty'
+run = 'layout tiling'
+
 
 
 # Possible values: (qwerty|dvorak)
@@ -175,10 +210,10 @@ run = 'layout floating'
     # Hyprland: bind = $mainMod, Q, exec, $terminal
     # `open -a` on the raw CLI binary just refocused the one running instance
     # instead of spawning a window; `-na` on the .app bundle forces a new
-    # Alacritty process (and a new window) every time, and lets AeroSpace
+    # Ghostty process (and a new window) every time, and lets AeroSpace
     # detect/tile it like any normal app window.
-    alt-q     = 'exec-and-forget open -na /Applications/Alacritty.app'
-    alt-enter = 'exec-and-forget open -na /Applications/Alacritty.app' # kept for muscle memory
+    alt-q     = 'exec-and-forget open -na /Applications/Ghostty.app'
+    alt-enter = 'exec-and-forget open -na /Applications/Ghostty.app' # kept for muscle memory
     # Hyprland: bind = $mainMod, E, exec, $fileManager
     alt-e = 'exec-and-forget open -a Finder'
     # Hyprland: bind = $mainMod, R, exec, $menu  ($menu = Raycast here)
@@ -244,16 +279,21 @@ run = 'layout floating'
     alt-0 = 'workspace 10'
     # See: https://nikitabobko.github.io/AeroSpace/commands#move-node-to-workspace
     # Hyprland: bind = $mainMod SHIFT, [1-0], movetoworkspace, N
-    alt-shift-1 = 'move-node-to-workspace 1'
-    alt-shift-2 = 'move-node-to-workspace 2'
-    alt-shift-3 = 'move-node-to-workspace 3'
-    alt-shift-4 = 'move-node-to-workspace 4'
-    alt-shift-5 = 'move-node-to-workspace 5'
-    alt-shift-6 = 'move-node-to-workspace 6'
-    alt-shift-7 = 'move-node-to-workspace 7'
-    alt-shift-8 = 'move-node-to-workspace 8'
-    alt-shift-9 = 'move-node-to-workspace 9'
-    alt-shift-0 = 'move-node-to-workspace 10'
+    # --focus-follows-window: moving a window to workspace N also switches
+    # focus to N (Hyprland's movetoworkspace already does this; AeroSpace
+    # doesn't by default). Not applied to the alt-shift-s scratchpad move
+    # further down -- that one's the opposite intent, tuck a window away
+    # *without* leaving your current workspace.
+    alt-shift-1 = 'move-node-to-workspace 1 --focus-follows-window'
+    alt-shift-2 = 'move-node-to-workspace 2 --focus-follows-window'
+    alt-shift-3 = 'move-node-to-workspace 3 --focus-follows-window'
+    alt-shift-4 = 'move-node-to-workspace 4 --focus-follows-window'
+    alt-shift-5 = 'move-node-to-workspace 5 --focus-follows-window'
+    alt-shift-6 = 'move-node-to-workspace 6 --focus-follows-window'
+    alt-shift-7 = 'move-node-to-workspace 7 --focus-follows-window'
+    alt-shift-8 = 'move-node-to-workspace 8 --focus-follows-window'
+    alt-shift-9 = 'move-node-to-workspace 9 --focus-follows-window'
+    alt-shift-0 = 'move-node-to-workspace 10 --focus-follows-window'
 
     # Hyprland: bind = $mainMod, mouse_down/mouse_up, workspace, e+1/e-1
     # (no mouse-scroll bindings in AeroSpace, so brackets stand in for scroll-to-cycle)

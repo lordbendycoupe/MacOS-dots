@@ -1,8 +1,27 @@
 # AutoRaise config -- focus-follows-mouse for AeroSpace (tiling WM), no raise/warp.
 # Built with -DEXPERIMENTAL_FOCUS_FIRST so focusDelay works: hovering a
 # window focuses it in AeroSpace's tree without reordering/raising it.
+#
+# delay/focusDelay units are ticks of pollMillis, not seconds/ms directly
+# (source: AutoRaise.mm) -- 0 disables raise entirely, 1 means "no extra
+# delay" (0ms), n>1 waits (n-1)*pollMillis. Both already at their fastest
+# possible value, untouched here.
 delay=0
 focusDelay=1
-pollMillis=50
-requireMouseStop=true
+# 20 is the enforced floor (sbmpost/AutoRaise silently resets anything
+# below it to the 50 default) -- this is the poll loop's own clock, so it's
+# the real ceiling on worst-case reaction time.
+pollMillis=20
+# This was the actual cause of the 1-2s lag / "have to move the mouse a
+# lot": true re-verifies on every single poll that the cursor is genuinely,
+# sub-pixel-perfectly still (mouseDelta=0.1px) before it'll even consider
+# firing -- any hand tremor or trackpad coasting keeps resetting that timer.
+# false removes the stop-and-settle gate entirely: focus fires as soon as
+# the hovered window differs from the focused one, immediately, matching
+# i3/sway/Hyprland-style sloppy focus. Tradeoff (inherent to true sloppy
+# focus, not a bug): focus can flicker if you visibly brush across a window
+# while moving through it to somewhere else.
+requireMouseStop=false
+# No longer gates "stopped" now that requireMouseStop is off -- just keeps
+# the movement detector maximally sensitive, which is what we want.
 mouseDelta=0.1

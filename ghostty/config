@@ -45,3 +45,34 @@ palette = 13=#f5bde6
 palette = 14=#8bd5ca
 
 keybind = shift+enter=text:\x1b\r
+
+# No "close this terminal?" prompt on close (alt-c in AeroSpace, cmd-w,
+# cmd-q, ...) even if a foreground process is still running.
+confirm-close-surface = false
+
+# AeroSpace tiles every Ghostty window anyway, so the drop shadow just reads
+# as visual noise between adjacent tiled windows.
+macos-window-shadow = false
+
+# A little breathing room instead of text running edge-to-edge; balanced so
+# leftover space from a non-multiple cell grid splits evenly on all sides
+# instead of piling up bottom/right.
+window-padding-x = 8
+window-padding-y = 8
+window-padding-balance = true
+
+# --- splits --------------------------------------------------------------
+split-divider-color = #8aadf4
+unfocused-split-opacity = 0.85
+
+keybind = super+d=new_split:right
+keybind = super+shift+d=new_split:down
+keybind = super+h=goto_split:left
+keybind = super+j=goto_split:down
+keybind = super+k=goto_split:up
+keybind = super+l=goto_split:right
+keybind = super+ctrl+h=resize_split:left,10
+keybind = super+ctrl+j=resize_split:down,10
+keybind = super+ctrl+k=resize_split:up,10
+keybind = super+ctrl+l=resize_split:right,10
+keybind = super+z=toggle_split_zoom

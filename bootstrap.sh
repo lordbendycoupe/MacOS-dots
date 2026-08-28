@@ -42,6 +42,7 @@ TOOLS=(
   "font-iosevka|brew list --cask font-iosevka >/dev/null 2>&1|brew install --cask font-iosevka|terminal font"
   "font-jetbrains-mono-nerd-font|brew list --cask font-jetbrains-mono-nerd-font >/dev/null 2>&1|brew install --cask font-jetbrains-mono-nerd-font|terminal font"
   "font-maple-mono-nf|brew list --cask font-maple-mono-nf >/dev/null 2>&1|brew install --cask font-maple-mono-nf|terminal font"
+  "tmux|command -v tmux|brew install tmux|terminal multiplexer"
 )
 
 install_tools() {
@@ -91,6 +92,19 @@ link_dotfiles() {
   link "zsh/zshenv"               "$HOME/.zshenv"
   link "git/ignore"               "$HOME/.config/git/ignore"
   git config --global core.excludesfile "$HOME/.config/git/ignore" 2>/dev/null || true
+  link "tmux/tmux.conf"           "$HOME/.config/tmux/tmux.conf"
+}
+
+install_tmux_plugins() {
+  local tpm_dir="$HOME/.config/tmux/plugins/tpm"
+  if [[ ! -d "$tpm_dir" ]]; then
+    git clone https://github.com/tmux-plugins/tpm "$tpm_dir" >/dev/null 2>&1
+  fi
+  # TPM's install script needs a running tmux server to attach plugins to.
+  tmux new-session -d -s _bootstrap 2>/dev/null || true
+  tmux source-file "$HOME/.config/tmux/tmux.conf" 2>/dev/null || true
+  "$tpm_dir/scripts/install_plugins.sh" >/dev/null 2>&1
+  tmux kill-session -t _bootstrap 2>/dev/null || true
 }
 
 install_launchagent() {
@@ -117,6 +131,9 @@ main() {
   echo
   echo "== Installing layout-saver LaunchAgent =="
   install_launchagent
+  echo
+  echo "== Installing tmux plugins (TPM) =="
+  install_tmux_plugins
   echo
   offer_icon_pack
 
